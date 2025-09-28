@@ -6,42 +6,44 @@ import concurrent.futures as pool
 import os
 import sys
 
+# Добавляем текущую директорию в путь Python
+sys.path.insert(0, os.path.dirname(__file__))
+
 from aiogram import executor
 from aiogram import Bot, Dispatcher, types
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.contrib.middlewares.logging import LoggingMiddleware
 
-# Импорты из нашего кода
-import config
-import constant
-
-# Инициализация логгера
-logger_module = __import__('logger')
-logger = logger_module.logger
+# Прямые импорты
+try:
+    import config
+    import constant
+    
+    # Импорты из cmd
+    from cmd.hook import bot_calc, create_notification
+    from cmd.start.hook import bot_start
+    from cmd.filters import IsTopic
+    
+    # Импорты из utils
+    from utils.throttling import ThrottlingMiddleware
+    from utils import database
+    from utils import notify_admins
+    
+    # Логгер
+    import logger
+    
+    log = logging.getLogger('main')
+    
+except ImportError as e:
+    print(f"Ошибка импорта: {e}")
+    sys.exit(1)
 
 # Инициализация базы данных при старте
-init_db_module = __import__('init_db')
-init_db_module.init_database()
-
-# Импорты утилит
-utils_module = __import__('utils')
-database = utils_module.database
-notify_admins = utils_module.notify_admins
-throttling_module = __import__('utils.throttling', fromlist=['ThrottlingMiddleware'])
-ThrottlingMiddleware = throttling_module.ThrottlingMiddleware
-
-# Импорты обработчиков
-cmd_hook_module = __import__('cmd.hook', fromlist=['bot_calc', 'create_notification'])
-bot_calc = cmd_hook_module.bot_calc
-create_notification = cmd_hook_module.create_notification
-
-cmd_start_hook_module = __import__('cmd.start.hook', fromlist=['bot_start'])
-bot_start = cmd_start_hook_module.bot_start
-
-cmd_filters_module = __import__('cmd.filters', fromlist=['IsTopic'])
-IsTopic = cmd_filters_module.IsTopic
-
-log = logging.getLogger('main')
+try:
+    from init_db import init_database
+    init_database()
+except Exception as e:
+    print(f"Ошибка инициализации БД: {e}")
 
 async def set_default_commands(dp):
     await dp.bot.set_my_commands([
