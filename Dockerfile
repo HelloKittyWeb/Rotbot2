@@ -5,6 +5,7 @@ WORKDIR /app
 # Установка системных зависимостей
 RUN apt-get update && apt-get install -y \
     gcc \
+    python3-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Копируем requirements и устанавливаем зависимости
@@ -16,6 +17,9 @@ COPY . .
 
 # Создаем необходимые директории
 RUN mkdir -p logs
+
+# Инициализируем базу данных
+RUN python init_db.py
 
 # Запускаем бота
 CMD ["python", "bot.py"]
