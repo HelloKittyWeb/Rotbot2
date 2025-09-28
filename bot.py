@@ -1,15 +1,4 @@
 # -*- coding: utf-8 -*-
-try:
-    import aiogram
-    import aiofiles
-    import aiohttp
-    print("✅ Все зависимости успешно загружены")
-except ImportError as e:
-    print(f"❌ Ошибка импорта: {e}")
-    exit(1)
-
-# остальной код бота...
-# -*- coding: utf-8 -*-
 import asyncio
 import datetime
 import logging
@@ -27,12 +16,16 @@ from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.contrib.middlewares.logging import LoggingMiddleware
 
 import logger
-import cmd
 import config
 import constant
 
 from utils.throttling import ThrottlingMiddleware
 from utils import notify_admins, database
+
+# Импортируем обработчики напрямую
+from cmd.hook import bot_calc, create_notification
+from cmd.start.hook import bot_start
+from cmd.filters import IsTopic
 
 # Инициализация базы данных при старте
 try:
@@ -91,6 +84,24 @@ async def notification(bot: Bot):
         
         await asyncio.sleep(30)
 
+def setup_handlers(dp: Dispatcher):
+    """Регистрация всех обработчиков"""
+    # Обработчик команды /start
+    dp.register_message_handler(bot_start, commands='start', chat_type=types.ChatType.PRIVATE, state='*')
+    
+    # Обработчики калькулятора
+    dp.register_message_handler(bot_calc, IsTopic(), state='*')
+    dp.register_callback_query_handler(create_notification, state='*')
+    
+    # Обработчик ошибок
+    dp.register_errors_handler(error_handler)
+
+async def error_handler(update: types.Update, exception):
+    log.error(update)
+    log.exception(exception)
+    await update.bot.send_message(config.bot_admins[0], 'Ошибка: ' + str(exception))
+    return True
+
 if __name__ == '__main__':
     # Проверка токена
     if not config.bot_token:
@@ -105,8 +116,8 @@ if __name__ == '__main__':
         dp.middleware.setup(LoggingMiddleware('main'))
         dp.middleware.setup(ThrottlingMiddleware())
 
-        cmd.setup(dp)
-        cmd.start.setup(dp)
+        # Регистрируем обработчики
+        setup_handlers(dp)
 
         dp['poolexecuter'] = PoolExecutor
         loop = asyncio.get_event_loop()
