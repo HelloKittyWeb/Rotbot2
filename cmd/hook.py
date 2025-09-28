@@ -129,3 +129,9 @@ async def bot_calc(msg: types.Message):
         _text += f'\nЧтобы добавить заметку:\n{_ct} {health} <заметка>'
 
     await msg.answer(_text, reply_markup=kb)
+# Добавьте это в конец файла cmd/hook.py
+def setup_calc_handlers(dp):
+    """Регистрация обработчиков калькулятора"""
+    from .filters import IsTopic
+    dp.register_message_handler(bot_calc, IsTopic(), state='*')
+    dp.register_callback_query_handler(create_notification, state='*')
