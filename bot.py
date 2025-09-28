@@ -1,4 +1,15 @@
 # -*- coding: utf-8 -*-
+try:
+    import aiogram
+    import aiofiles
+    import aiohttp
+    print("✅ Все зависимости успешно загружены")
+except ImportError as e:
+    print(f"❌ Ошибка импорта: {e}")
+    exit(1)
+
+# остальной код бота...
+# -*- coding: utf-8 -*-
 import asyncio
 import datetime
 import logging
