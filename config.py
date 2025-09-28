@@ -6,5 +6,5 @@ debug = False
 
 # telegram bot
 bot_token = '8348845652:AAHLloipxWBwuuffx9Rnz0Y57fh1NxA6bFM'
-bot_admins = [837681107]
-accept_topic_ids = [23452,]
+bot_admins = [5593275692]
+accept_topic_ids = [17854,]
